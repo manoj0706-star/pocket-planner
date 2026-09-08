@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PocketPlanner — Budget Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════
+     SIDEBAR
+══════════════════════════════════════ -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">💰</div>
+    <div class="logo-text">Pocket<span>Planner</span></div>
+  </div>
+
+  <div class="nav-label">Menu</div>
+
+  <div class="nav-item active" data-section="dashboard">
+    <span class="nav-icon">🏠</span> Dashboard
+  </div>
+  <div class="nav-item" data-section="add-income">
+    <span class="nav-icon">➕</span> Add Income
+  </div>
+  <div class="nav-item" data-section="add-expense">
+    <span class="nav-icon">➖</span> Add Expense
+  </div>
+  <div class="nav-item" data-section="transactions">
+    <span class="nav-icon">📋</span> Transactions
+  </div>
+  <div class="nav-item" data-section="monthly-budget">
+    <span class="nav-icon">📅</span> Monthly Budget
+  </div>
+  <div class="nav-item" data-section="budget">
+    <span class="nav-icon">🎯</span> Category Budget
+  </div>
+  <div class="nav-item" data-section="charts">
+    <span class="nav-icon">📈</span> Charts
+  </div>
+  <div class="nav-item" data-section="reports">
+    <span class="nav-icon">📊</span> Reports
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="version">PocketPlanner v2.0</div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════════════════
+     MAIN CONTENT
+══════════════════════════════════════ -->
+<main class="main">
+
+  <!-- ── DASHBOARD ── -->
+  <section class="section active" id="section-dashboard">
+    <div class="page-header">
+      <h1>Dashboard</h1>
+      <p>Your financial overview at a glance</p>
+      <span class="date-badge" id="today-date"></span>
+    </div>
+
+    <div class="cards-grid">
+      <div class="card income-card">
+        <div class="card-icon">📈</div>
+        <div class="card-label">Total Income</div>
+        <div class="card-value" id="dash-income">₹0</div>
+        <div class="card-sub">All time earnings</div>
+      </div>
+      <div class="card expense-card">
+        <div class="card-icon">📉</div>
+        <div class="card-label">Total Expenses</div>
+        <div class="card-value" id="dash-expense">₹0</div>
+        <div class="card-sub">All time spending</div>
+      </div>
+      <div class="card balance-card">
+        <div class="card-icon">💳</div>
+        <div class="card-label">Remaining Balance</div>
+        <div class="card-value" id="dash-balance">₹0</div>
+        <div class="card-sub">Available funds</div>
+      </div>
+      <div class="card savings-card">
+        <div class="card-icon">🏦</div>
+        <div class="card-label">Savings Rate</div>
+        <div class="card-value" id="dash-savings">0%</div>
+        <div class="card-sub">Of total income saved</div>
+      </div>
+    </div>
+
+    <div class="progress-wrap">
+      <div class="progress-header">
+        <div class="progress-title">Expense vs Income Ratio</div>
+        <div class="progress-pct" id="ratio-pct">0%</div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="ratio-bar" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div class="section-title">
+      Recent Transactions
+      <span class="see-all" onclick="navigate('transactions')">See all →</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Type</th><th>Category</th><th>Amount</th><th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="recent-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="recent-empty" style="display:none">
+        <div class="empty-icon">🌱</div>
+        <p>No transactions yet. Add your first income or expense!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── ADD INCOME ── -->
+  <section class="section" id="section-add-income">
+    <div class="page-header">
+      <h1>Add Income</h1>
+      <p>Record a new income entry</p>
+    </div>
+    <div class="form-card">
+      <h2>💵 New Income</h2>
+      <p class="form-subtitle">Fill in the details to log your income</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" id="inc-amount" placeholder="e.g. 50000" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="inc-date" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="inc-category">
+          <option value="">— Select Category —</option>
+          <option>Salary</option>
+          <option>Business</option>
+          <option>Freelance</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Note (optional)</label>
+        <textarea id="inc-note" placeholder="Add a note..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-income" onclick="addTransaction('income')">
+        ➕ Add Income
+      </button>
+    </div>
+  </section>
+
+  <!-- ── ADD EXPENSE ── -->
+  <section class="section" id="section-add-expense">
+    <div class="page-header">
+      <h1>Add Expense</h1>
+      <p>Track where your money goes</p>
+    </div>
+    <div class="form-card">
+      <h2>💸 New Expense</h2>
+      <p class="form-subtitle">Fill in the details to log your expense</p>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" id="exp-amount" placeholder="e.g. 1500" min="0" />
+        </div>
+        <div class="form-group">
+          <label>Date</label>
+          <input type="date" id="exp-date" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Category</label>
+        <select id="exp-category">
+          <option value="">— Select Category —</option>
+          <option>Food</option>
+          <option>Travel</option>
+          <option>Bills</option>
+          <option>Rent</option>
+          <option>EMI</option>
+          <option>Shopping</option>
+          <option>Health</option>
+          <option>Entertainment</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Note (optional)</label>
+        <textarea id="exp-note" placeholder="Add a note..."></textarea>
+      </div>
+      <button class="btn btn-primary btn-expense" onclick="addTransaction('expense')">
+        ➖ Add Expense
+      </button>
+    </div>
+  </section>
+
+  <!-- ── TRANSACTIONS ── -->
+  <section class="section" id="section-transactions">
+    <div class="page-header">
+      <h1>Transactions</h1>
+      <p>Complete history of your financial activity</p>
+    </div>
+    <div class="table-wrap">
+      <div class="table-toolbar">
+        <h3>All Transactions</h3>
+        <div class="filter-row">
+          <select id="filter-type" onchange="renderTransactions()">
+            <option value="">All Types</option>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+          </select>
+          <select id="filter-cat" onchange="renderTransactions()">
+            <option value="">All Categories</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th><th>Type</th><th>Category</th>
+            <th>Amount</th><th>Note</th><th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="tx-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="tx-empty" style="display:none">
+        <div class="empty-icon">📭</div>
+        <p>No transactions found.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── MONTHLY BUDGET (NEW) ── -->
+  <section class="section" id="section-monthly-budget">
+    <div class="page-header">
+      <h1>Monthly Budget</h1>
+      <p>Set and track your overall monthly spending limit</p>
+    </div>
+
+    <!-- Set Budget Card -->
+    <div class="mb-set-card">
+      <h2>📅 Set Monthly Budget</h2>
+      <p class="form-subtitle">Choose a month and define your total spending budget</p>
+      <div class="mb-input-row">
+        <div class="form-group" style="margin:0; flex:1">
+          <label>Month</label>
+          <input type="month" id="mb-month" />
+        </div>
+        <div class="form-group" style="margin:0; flex:1">
+          <label>Budget Amount (₹)</label>
+          <input type="number" id="mb-amount" placeholder="e.g. 30000" min="0" />
+        </div>
+        <button class="btn btn-primary" style="margin-top:auto; width:auto; padding:13px 28px" onclick="saveMonthlyBudget()">
+          💾 Save Budget
+        </button>
+      </div>
+    </div>
+
+    <!-- Budget Overview Cards -->
+    <div class="mb-cards">
+      <div class="mb-stat-card total">
+        <div class="mb-stat-icon">📦</div>
+        <div class="mb-stat-label">Total Budget</div>
+        <div class="mb-stat-value" id="mb-total">₹0</div>
+      </div>
+      <div class="mb-stat-card spent">
+        <div class="mb-stat-icon">💸</div>
+        <div class="mb-stat-label">Amount Spent</div>
+        <div class="mb-stat-value" id="mb-spent">₹0</div>
+      </div>
+      <div class="mb-stat-card remaining">
+        <div class="mb-stat-icon">🟢</div>
+        <div class="mb-stat-label">Remaining</div>
+        <div class="mb-stat-value" id="mb-remaining">₹0</div>
+      </div>
+      <div class="mb-stat-card usage">
+        <div class="mb-stat-icon">📊</div>
+        <div class="mb-stat-label">Usage</div>
+        <div class="mb-stat-value" id="mb-usage-pct">0%</div>
+      </div>
+    </div>
+
+    <!-- Progress & Warning -->
+    <div class="mb-progress-card">
+      <div class="mb-progress-header">
+        <span class="mb-progress-label">Budget Usage for <span id="mb-month-label">—</span></span>
+        <span class="mb-progress-pct" id="mb-bar-pct">0%</span>
+      </div>
+      <div class="progress-track" style="height:12px">
+        <div class="mb-bar-fill" id="mb-bar" style="width:0%"></div>
+      </div>
+      <div id="mb-warning" class="mb-warning" style="display:none"></div>
+    </div>
+
+    <!-- Monthly Budget History -->
+    <div class="section-title" style="margin-top:32px">
+      Budget History
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Month</th><th>Budget</th><th>Spent</th><th>Remaining</th><th>Usage</th><th>Status</th></tr>
+        </thead>
+        <tbody id="mb-history-tbody"></tbody>
+      </table>
+      <div class="empty-state" id="mb-history-empty" style="display:none">
+        <div class="empty-icon">📅</div>
+        <p>No monthly budgets saved yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CATEGORY BUDGET ── -->
+  <section class="section" id="section-budget">
+    <div class="page-header">
+      <h1>Category Budget</h1>
+      <p>Set spending limits per category</p>
+    </div>
+    <div class="budget-section">
+      <h2>🎯 Set Category Limits</h2>
+      <p class="sub">Define how much you want to spend per category</p>
+
+      <div class="budget-input-row">
+        <div class="form-group" style="margin:0">
+          <label>Category</label>
+          <select id="budget-cat">
+            <option value="">— Select —</option>
+            <option>Food</option><option>Travel</option><option>Bills</option>
+            <option>Rent</option><option>EMI</option><option>Shopping</option>
+            <option>Health</option><option>Entertainment</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin:0">
+          <label>Limit (₹)</label>
+          <input type="number" id="budget-limit" placeholder="e.g. 5000" min="0" />
+        </div>
+        <button class="btn-add-budget" onclick="addBudget()">＋ Set</button>
+      </div>
+
+      <div class="budget-list" id="budget-list">
+        <div class="empty-state" id="budget-empty">
+          <div class="empty-icon">🎯</div>
+          <p>No budgets set yet.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CHARTS (NEW) ── -->
+  <section class="section" id="section-charts">
+    <div class="page-header">
+      <h1>Charts</h1>
+      <p>Visual insights into your financial data</p>
+    </div>
+
+    <div class="charts-grid">
+      <!-- Pie Chart -->
+      <div class="chart-card chart-card--pie">
+        <div class="chart-card-header">
+          <div>
+            <h3>Expense Distribution</h3>
+            <p>Spending breakdown by category</p>
+          </div>
+          <span class="chart-icon">🥧</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="pieChart"></canvas>
+        </div>
+        <div class="chart-legend" id="pie-legend"></div>
+      </div>
+
+      <!-- Bar Chart -->
+      <div class="chart-card chart-card--bar">
+        <div class="chart-card-header">
+          <div>
+            <h3>Income vs Expense</h3>
+            <p>Monthly comparison over time</p>
+          </div>
+          <span class="chart-icon">📊</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="barChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Line Chart -->
+      <div class="chart-card chart-card--line">
+        <div class="chart-card-header">
+          <div>
+            <h3>Savings Trend</h3>
+            <p>How your savings have grown month by month</p>
+          </div>
+          <span class="chart-icon">📉</span>
+        </div>
+        <div class="chart-container">
+          <canvas id="lineChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── REPORTS ── -->
+  <section class="section" id="section-reports">
+    <div class="page-header">
+      <h1>Reports</h1>
+      <p>Visual breakdown of your finances</p>
+    </div>
+    <div class="reports-grid">
+      <div class="report-card">
+        <h3>📊 Expense by Category</h3>
+        <div id="expense-report"></div>
+      </div>
+      <div class="report-card">
+        <h3>💰 Income by Category</h3>
+        <div id="income-report"></div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toast-icon">✅</span>
+  <span id="toast-msg">Done!</span>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
