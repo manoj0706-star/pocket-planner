@@ -204,13 +204,17 @@ window.openQuickAddModal = function() {
   const modal = document.getElementById('quick-add-modal');
   if (modal) {
     document.getElementById('modal-date').value = new Date().toISOString().split('T')[0];
+    modal.style.display = 'flex';
     modal.classList.add('show');
   }
 };
 
 window.closeQuickAddModal = function() {
   const modal = document.getElementById('quick-add-modal');
-  if (modal) modal.classList.remove('show');
+  if (modal) {
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+  }
 };
 
 window.switchQuickTab = function(type) {
@@ -256,7 +260,6 @@ window.saveQuickAdd = async function() {
 // =================== AUTH ===================
 const loginOverlay = document.getElementById('login-overlay');
 const googleBtn = document.getElementById('google-signin-btn');
-const logoutBtn = document.getElementById('logout-btn');
 
 window.enterDemoMode = function() {
   const demoUser = {
@@ -385,35 +388,79 @@ if (isFirebaseConfigured() && auth) {
   });
 }
 
+async function doLogout() {
+  if (unsubscribeTransactions) unsubscribeTransactions();
+  notify('Signed Out', 'You have been signed out of PocketPlanner.', 'signout');
+  localStorage.removeItem('pocketplanner_user');
+  currentUser = null;
+  if (loginOverlay) loginOverlay.style.display = 'flex';
+  const profileEl = document.getElementById('user-profile');
+  if (profileEl) profileEl.style.display = 'none';
+  const headerBadge = document.getElementById('header-user-badge');
+  if (headerBadge) headerBadge.style.display = 'none';
+  allTransactions = [];
+  refreshAll();
+  if (auth && isFirebaseConfigured()) {
+    try { await signOut(auth); } catch(e) {}
+  }
+}
+window.doLogout = doLogout;
+
+const logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) {
-  logoutBtn.addEventListener('click', async () => {
-    if (unsubscribeTransactions) unsubscribeTransactions();
-    notify('Signed Out', 'You have been signed out of PocketPlanner.', 'signout');
-    localStorage.removeItem('pocketplanner_user');
-    currentUser = null;
-    loginOverlay.style.display = 'flex';
-    document.getElementById('user-profile').style.display = 'none';
-    allTransactions = [];
-    refreshAll();
-    if (auth && isFirebaseConfigured()) {
-      try { await signOut(auth); } catch(e) {}
-    }
-  });
+  logoutBtn.addEventListener('click', doLogout);
+}
+const headerLogoutBtn = document.getElementById('header-logout-btn');
+if (headerLogoutBtn) {
+  headerLogoutBtn.addEventListener('click', doLogout);
+}
+
+// Eagerly restore session from localStorage to prevent flash
+const initialSavedUser = localStorage.getItem('pocketplanner_user');
+if (initialSavedUser) {
+  try {
+    const parsed = JSON.parse(initialSavedUser);
+    currentUser = parsed;
+    if (loginOverlay) loginOverlay.style.display = 'none';
+    showUserProfile(parsed);
+    loadLocalData();
+    document.getElementById('sync-text').textContent = parsed.isDemo ? 'Demo Mode' : 'Local Mode';
+  } catch(e) {}
+} else {
+  if (loginOverlay) loginOverlay.style.display = 'flex';
 }
 
 if (isFirebaseConfigured() && auth) {
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      // Firebase authenticated user
       currentUser = user;
-      loginOverlay.style.display = 'none';
+      if (loginOverlay) loginOverlay.style.display = 'none';
       showUserProfile(user);
       subscribeToData(user.uid);
       document.getElementById('sync-text').textContent = 'Cloud Synced';
       requestNotificationPermission();
     } else {
+      // No Firebase user — check if there's a demo/local session in localStorage
+      const savedUser = localStorage.getItem('pocketplanner_user');
+      if (savedUser) {
+        try {
+          const localUser = JSON.parse(savedUser);
+          currentUser = localUser;
+          if (loginOverlay) loginOverlay.style.display = 'none';
+          showUserProfile(localUser);
+          loadLocalData();
+          document.getElementById('sync-text').textContent = localUser.isDemo ? 'Demo Mode' : 'Local Mode';
+          return; // Don't show login overlay
+        } catch(e) {}
+      }
+      // Truly not logged in — show login screen
       currentUser = null;
-      loginOverlay.style.display = 'flex';
-      document.getElementById('user-profile').style.display = 'none';
+      if (loginOverlay) loginOverlay.style.display = 'flex';
+      const profileEl = document.getElementById('user-profile');
+      if (profileEl) profileEl.style.display = 'none';
+      const headerBadge = document.getElementById('header-user-badge');
+      if (headerBadge) headerBadge.style.display = 'none';
       if (unsubscribeTransactions) unsubscribeTransactions();
       allTransactions = [];
       refreshAll();
@@ -424,30 +471,44 @@ if (isFirebaseConfigured() && auth) {
   if (savedUser) {
     try {
       currentUser = JSON.parse(savedUser);
-      loginOverlay.style.display = 'none';
+      if (loginOverlay) loginOverlay.style.display = 'none';
       showUserProfile(currentUser);
       loadLocalData();
       document.getElementById('sync-text').textContent = 'Local Mode';
     } catch(e) {
-      loginOverlay.style.display = 'flex';
+      if (loginOverlay) loginOverlay.style.display = 'flex';
     }
   } else {
-    loginOverlay.style.display = 'flex';
+    if (loginOverlay) loginOverlay.style.display = 'flex';
   }
 }
 
 function showUserProfile(user) {
   const profileEl = document.getElementById('user-profile');
-  if (!profileEl) return;
-  profileEl.style.display = 'flex';
-  document.getElementById('user-name').textContent = user.displayName || 'User';
-  document.getElementById('user-email').textContent = user.email || '';
-  const avatar = document.getElementById('user-avatar');
-  if (user.photoURL) {
-    avatar.src = user.photoURL;
-    avatar.style.display = 'block';
-  } else {
-    avatar.style.display = 'none';
+  if (profileEl) {
+    profileEl.style.display = 'block';
+    document.getElementById('user-name').textContent = user.displayName || 'User';
+    document.getElementById('user-email').textContent = user.email || '';
+    const avatar = document.getElementById('user-avatar');
+    const fallback = document.getElementById('user-avatar-fallback');
+    if (user.photoURL) {
+      avatar.src = user.photoURL;
+      avatar.style.display = 'block';
+      if (fallback) fallback.style.display = 'none';
+    } else {
+      avatar.style.display = 'none';
+      if (fallback) {
+        fallback.style.display = 'flex';
+        fallback.textContent = (user.displayName || 'U').charAt(0).toUpperCase();
+      }
+    }
+  }
+
+  const headerBadge = document.getElementById('header-user-badge');
+  if (headerBadge) {
+    headerBadge.style.display = 'inline-flex';
+    const headerName = document.getElementById('header-user-name');
+    if (headerName) headerName.textContent = (user.displayName || 'User').split(' ')[0];
   }
 }
 
