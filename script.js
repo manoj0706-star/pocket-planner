@@ -535,7 +535,21 @@ function subscribeToData(uid) {
   });
 }
 
-// =================== NAVIGATION ===================
+// =================== NAVIGATION & MOBILE DRAWER ===================
+window.toggleMobileSidebar = function() {
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (sidebar) sidebar.classList.toggle('open');
+  if (backdrop) backdrop.classList.toggle('show');
+};
+
+window.closeMobileSidebar = function() {
+  const sidebar = document.querySelector('.sidebar');
+  const backdrop = document.getElementById('sidebar-backdrop');
+  if (sidebar) sidebar.classList.remove('open');
+  if (backdrop) backdrop.classList.remove('show');
+};
+
 document.querySelectorAll('.nav-item').forEach(item => {
   item.addEventListener('click', function() {
     document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
@@ -549,12 +563,15 @@ document.querySelectorAll('.nav-item').forEach(item => {
     const section = this.getAttribute('data-section');
     if (section === 'health-score') loadHealthScore();
     else if (section === 'spending-prediction') loadSpendingPrediction();
+
+    closeMobileSidebar();
   });
 });
 
 window.navigate = function(section) {
   const navItem = document.querySelector(`.nav-item[data-section="${section}"]`);
   if (navItem) navItem.click();
+  closeMobileSidebar();
 };
 
 // =================== DATA INIT ===================

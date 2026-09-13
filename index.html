@@ -4,11 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PocketPlanner — Beast Glossy Budget Tracker</title>
-  <link rel="stylesheet" href="style.css?v=2.2" />
+  <link rel="stylesheet" href="style.css?v=2.3" />
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <!-- Firebase SDKs -->
-  <script type="module" src="script.js?v=2.2"></script>
+  <script type="module" src="script.js?v=2.3"></script>
 </head>
 <body>
 
@@ -24,6 +24,7 @@
   <div class="logo">
     <div class="logo-icon">💰</div>
     <div class="logo-text">Pocket<span>Planner</span></div>
+    <button class="sidebar-close-btn" onclick="closeMobileSidebar()" aria-label="Close menu">✕</button>
   </div>
 
   <div class="nav-label">Menu</div>
@@ -85,6 +86,9 @@
   </div>
 </aside>
 
+<!-- MOBILE SIDEBAR BACKDROP -->
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeMobileSidebar()"></div>
+
 <!-- ══════════════════════════════════════
      MAIN CONTENT
 ══════════════════════════════════════ -->
@@ -92,16 +96,26 @@
 
   <!-- TOP HEADER -->
   <header class="top-header">
+    <div class="mobile-header-left">
+      <button class="mobile-nav-toggle" id="mobile-menu-btn" aria-label="Open menu" onclick="toggleMobileSidebar()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="mobile-logo">💰 Pocket<span>Planner</span></div>
+    </div>
     <div class="header-search">
       <span class="search-icon">🔍</span>
       <input type="text" id="global-search" placeholder="Search transactions, categories, notes..." oninput="handleGlobalSearch(this.value)" />
     </div>
     <div class="header-actions">
       <button class="btn btn-glass primary-glow" onclick="openQuickAddModal()">
-        <span>⚡</span> Quick Add
+        <span>⚡</span> <span class="btn-text">Quick Add</span>
       </button>
       <button class="btn btn-glass" onclick="exportCSV()">
-        <span>📥</span> Export CSV
+        <span>📥</span> <span class="btn-text">Export CSV</span>
       </button>
       <div class="sync-badge" id="sync-status">
         <span class="sync-dot"></span> <span id="sync-text">Cloud Synced</span>
